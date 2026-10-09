@@ -31,6 +31,10 @@ export interface Signal {
   candles: Candle[];
   analysis: string[];
   generatedAt: string;
+  activatedAt: string;
+  pipSize: number;
+  runningPips: number;
+  status: "running" | "tp1" | "tp2" | "sl";
 }
 
 function sma(values: number[], period: number): number {
@@ -76,20 +80,24 @@ const round = (v: number, d: number) => {
 
 export function computeSignal(meta: SymbolMeta, candles: Candle[]): Signal | null {
   if (candles.length < 30) return null;
-  const closes = candles.map((c) => c.close);
-  const price = closes[closes.length - 1]!;
-  const prevClose = closes[closes.length - 2]!;
+  const allCloses = candles.map((c) => c.close);
+  const price = allCloses[allCloses.length - 1]!;
+  const last = candles[candles.length - 1]!;
+  const activationCandle = candles[candles.length - 2]!;
+  const hist = candles.slice(0, -1);
+  const closes = hist.map((c) => c.close);
+  const prevClose = allCloses[allCloses.length - 2]!;
   const changePct = prevClose ? ((price - prevClose) / prevClose) * 100 : 0;
 
   const sma20 = sma(closes, 20);
   const sma50 = sma(closes, 50);
-  const atr14 = atr(candles);
+  const atr14 = atr(hist);
   const rsi14 = rsi(closes);
 
-  const direction: "buy" | "sell" = price >= sma20 ? "buy" : "sell";
+  const direction: "buy" | "sell" = prevClose >= sma20 ? "buy" : "sell";
   const sign = direction === "buy" ? 1 : -1;
 
-  const entry = price;
+  const entry = prevClose;
   const tp1 = round(entry + sign * atr14 * 1.2, meta.decimals);
   const tp2 = round(entry + sign * atr14 * 2.4, meta.decimals);
   const sl = round(entry - sign * atr14 * 1.5, meta.decimals);
@@ -121,7 +129,18 @@ export function computeSignal(meta: SymbolMeta, candles: Candle[]): Signal | nul
     `Risk note: position sizing should assume the full stop-loss distance can be hit. This signal is generated from end-of-day data and is not financial advice.`,
   ];
 
+  const pipSize = meta.category === "Forex" ? 10 ** -(meta.decimals - 1) : meta.decimals >= 2 ? 10 ** -(meta.decimals - 1) : 1;
+  const runningPips = Math.round(((price - entry) * sign) / pipSize * 10) / 10;
+  const best = direction === "buy" ? last.high : last.low;
+  const worst = direction === "buy" ? last.low : last.high;
+  const status: Signal["status"] =
+    (worst - sl) * sign <= 0 ? "sl" : (best - tp2) * sign >= 0 ? "tp2" : (best - tp1) * sign >= 0 ? "tp1" : "running";
+
   return {
+    activatedAt: new Date(activationCandle.time + "T21:00:00Z").toISOString(),
+    pipSize,
+    runningPips,
+    status,
     id: meta.id,
     symbol: meta.id,
     name: meta.name,
