@@ -44,7 +44,7 @@ export const Route = createFileRoute("/")({
   component: Index,
   errorComponent: ({ error }) => (
     <div role="alert" className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
-      {error.message}
+      {error instanceof Error ? error.message : "Failed to load signals"}
     </div>
   ),
 });

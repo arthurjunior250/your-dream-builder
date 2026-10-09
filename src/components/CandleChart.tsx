@@ -74,7 +74,7 @@ export function CandleChart({ candles, signal }: Props) {
         </g>
       ))}
       <text x={8} y={H - 8} fill="var(--color-muted-foreground)" fontSize={9}>
-        {candles[0].time} — {candles[candles.length - 1].time} · Daily
+        {candles[0]!.time} — {candles[candles.length - 1]!.time} · Daily
       </text>
     </svg>
   );
