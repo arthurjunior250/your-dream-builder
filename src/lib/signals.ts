@@ -43,8 +43,8 @@ function atr(candles: Candle[], period = 14): number {
   if (candles.length < period + 1) return 0;
   let sum = 0;
   for (let i = candles.length - period; i < candles.length; i++) {
-    const c = candles[i];
-    const prev = candles[i - 1];
+    const c = candles[i]!;
+    const prev = candles[i - 1]!;
     const tr = Math.max(
       c.high - c.low,
       Math.abs(c.high - prev.close),
@@ -60,7 +60,7 @@ function rsi(closes: number[], period = 14): number {
   let gains = 0;
   let losses = 0;
   for (let i = closes.length - period; i < closes.length; i++) {
-    const diff = closes[i] - closes[i - 1];
+    const diff = closes[i]! - closes[i - 1]!;
     if (diff >= 0) gains += diff;
     else losses -= diff;
   }
@@ -77,8 +77,8 @@ const round = (v: number, d: number) => {
 export function computeSignal(meta: SymbolMeta, candles: Candle[]): Signal | null {
   if (candles.length < 30) return null;
   const closes = candles.map((c) => c.close);
-  const price = closes[closes.length - 1];
-  const prevClose = closes[closes.length - 2];
+  const price = closes[closes.length - 1]!;
+  const prevClose = closes[closes.length - 2]!;
   const changePct = prevClose ? ((price - prevClose) / prevClose) * 100 : 0;
 
   const sma20 = sma(closes, 20);
