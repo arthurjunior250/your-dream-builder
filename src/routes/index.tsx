@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Activity, Bot, Radio } from "lucide-react";
 import type { Signal } from "@/lib/signals";
@@ -55,11 +55,11 @@ export const Route = createFileRoute("/")({
 const CATEGORIES = ["All", "Forex", "Crypto", "Commodities", "Indices"] as const;
 
 function Index() {
-  const { data } = useSuspenseQuery(signalsQuery);
+  const { data, isPending } = useQuery(signalsQuery);
   const [category, setCategory] = useState<(typeof CATEGORIES)[number]>("All");
 
-  const signals =
-    category === "All" ? data.signals : data.signals.filter((s) => s.category === category);
+  const all = data?.signals ?? [];
+  const signals = category === "All" ? all : all.filter((s) => s.category === category);
 
   return (
     <div className="min-h-screen bg-background">
