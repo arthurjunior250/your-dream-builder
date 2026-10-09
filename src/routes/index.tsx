@@ -107,7 +107,7 @@ function Index() {
         </div>
 
         <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-3">
-          {data.signals.slice(0, 9).map((s) => (
+          {all.slice(0, 9).map((s) => (
             <div key={s.id} className="rounded-xl border border-border bg-card px-3 py-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold">{s.symbol}</span>
@@ -132,7 +132,10 @@ function Index() {
       </header>
 
       <main className="mx-auto max-w-3xl space-y-8 px-4 pb-16">
-        {signals.length === 0 && (
+        {isPending && (
+          <p className="py-12 text-center text-sm text-muted-foreground">Loading live signals…</p>
+        )}
+        {!isPending && signals.length === 0 && (
           <p className="py-12 text-center text-sm text-muted-foreground">
             No signals available for this category right now.
           </p>
