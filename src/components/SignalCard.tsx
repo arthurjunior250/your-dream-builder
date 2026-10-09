@@ -71,7 +71,25 @@ export function SignalCard({ signal }: { signal: Signal }) {
           </span>
         </p>
 
-        <div className="mt-3 grid grid-cols-4 gap-2">
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className={`rounded-lg border px-3 py-2 text-center ${signal.runningPips >= 0 ? "border-buy/40 bg-buy/10 text-buy" : "border-sell/40 bg-sell/10 text-sell"}`}>
+            <div className="text-[10px] font-semibold tracking-widest uppercase opacity-80">
+              Running P/L {signal.status !== "running" && `· ${signal.status.toUpperCase()} hit`}
+            </div>
+            <div className="font-mono-num text-lg font-bold">
+              {signal.runningPips >= 0 ? "+" : ""}
+              {signal.runningPips} pips
+            </div>
+          </div>
+          <div className="rounded-lg border border-border bg-secondary/40 px-3 py-2 text-center">
+            <div className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">Activated</div>
+            <div className="font-mono-num text-sm font-bold">
+              {new Date(signal.activatedAt).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-2 grid grid-cols-4 gap-2">
           <LevelBox label="Entry" value={fmt(signal.entry)} tone="entry" />
           <LevelBox label="TP1" value={fmt(signal.tp1)} tone="tp" />
           <LevelBox label="TP2" value={fmt(signal.tp2)} tone="tp" />
