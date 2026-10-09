@@ -22,7 +22,10 @@ const signalsQuery = queryOptions({
 });
 
 export const Route = createFileRoute("/")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(signalsQuery),
+  loader: ({ context }) =>
+    typeof window !== "undefined"
+      ? context.queryClient.ensureQueryData(signalsQuery)
+      : undefined,
   head: () => ({
     meta: [
       { title: "SignalEdge — AI Trading Signals for Forex, Crypto, Gold & Indices" },
