@@ -1,8 +1,10 @@
-import type { Candle, Signal } from "@/lib/signals";
+import type { Candle } from "@/lib/signals";
 
 interface Props {
   candles: Candle[];
-  signal: Pick<Signal, "entry" | "tp1" | "tp2" | "sl" | "direction" | "decimals">;
+  decimals: number;
+  levels?: { entry: number; tp1: number; tp2: number; sl: number } | null;
+  poi?: { top: number; bottom: number } | null;
 }
 
 const W = 640;
@@ -11,12 +13,13 @@ const PAD_R = 64;
 const PAD_T = 12;
 const PAD_B = 22;
 
-export function CandleChart({ candles, signal }: Props) {
+export function CandleChart({ candles, decimals, levels, poi }: Props) {
+  const signal = { decimals };
   if (candles.length === 0) return null;
 
-  const levels = [signal.entry, signal.tp1, signal.tp2, signal.sl];
-  let min = Math.min(...candles.map((c) => c.low), ...levels);
-  let max = Math.max(...candles.map((c) => c.high), ...levels);
+  const lv = [...(levels ? [levels.entry, levels.tp1, levels.tp2, levels.sl] : []), ...(poi ? [poi.top, poi.bottom] : [])];
+  let min = Math.min(...candles.map((c) => c.low), ...lv);
+  let max = Math.max(...candles.map((c) => c.high), ...lv);
   const pad = (max - min) * 0.06 || 1;
   min -= pad;
   max += pad;
@@ -29,11 +32,11 @@ export function CandleChart({ candles, signal }: Props) {
 
   const gridValues = Array.from({ length: 5 }, (_, i) => min + ((max - min) * (i + 0.5)) / 5);
 
-  const levelLines = [
-    { v: signal.tp2, label: "TP2", color: "var(--color-buy)" },
-    { v: signal.tp1, label: "TP1", color: "var(--color-buy)" },
-    { v: signal.entry, label: "ENTRY", color: "var(--color-chart-3)" },
-    { v: signal.sl, label: "SL", color: "var(--color-sell)" },
+  const levelLines = !levels ? [] : [
+    { v: levels.tp2, label: "TP2", color: "var(--color-buy)" },
+    { v: levels.tp1, label: "TP1", color: "var(--color-buy)" },
+    { v: levels.entry, label: "ENTRY", color: "var(--color-chart-3)" },
+    { v: levels.sl, label: "SL", color: "var(--color-sell)" },
   ];
 
   return (
@@ -64,6 +67,12 @@ export function CandleChart({ candles, signal }: Props) {
           </g>
         );
       })}
+      {poi && (
+        <g>
+          <rect x={0} y={y(poi.top)} width={plotW} height={Math.max(2, y(poi.bottom) - y(poi.top))} fill="var(--color-primary)" opacity={0.15} />
+          <text x={6} y={y(poi.top) - 3} fill="var(--color-primary)" fontSize={9} fontWeight={700}>15M POI</text>
+        </g>
+      )}
       {levelLines.map((l) => (
         <g key={l.label}>
           <line x1={0} x2={plotW} y1={y(l.v)} y2={y(l.v)} stroke={l.color} strokeWidth={1} strokeDasharray="6 4" opacity={0.9} />
@@ -74,7 +83,7 @@ export function CandleChart({ candles, signal }: Props) {
         </g>
       ))}
       <text x={8} y={H - 8} fill="var(--color-muted-foreground)" fontSize={9}>
-        {candles[0]!.time} — {candles[candles.length - 1]!.time} · Daily
+        5M chart · {new Date(candles[candles.length - 1]!.t).toISOString().slice(0, 16).replace("T", " ")} UTC
       </text>
     </svg>
   );

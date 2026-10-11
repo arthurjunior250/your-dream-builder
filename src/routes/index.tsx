@@ -28,17 +28,17 @@ export const Route = createFileRoute("/")({
       : undefined,
   head: () => ({
     meta: [
-      { title: "SignalEdge — AI Trading Signals for Forex, Crypto, Gold & Indices" },
+      { title: "SignalEdge — Scalping Signals for Forex, Gold, Crypto & Indices" },
       {
         name: "description",
         content:
-          "Live AI-generated trading signals with entry, take-profit, stop-loss and confidence scores across forex, crypto, commodities and indices.",
+          "Scalping signals: 1H trend, 15M points of interest and 5M sniper entries with tight stops, live P/L in pips and trade history.",
       },
-      { property: "og:title", content: "SignalEdge — AI Trading Signals" },
+      { property: "og:title", content: "SignalEdge — Scalping Signals" },
       {
         property: "og:description",
         content:
-          "Live AI trading signals with entry, TP, SL and confidence scores across forex, crypto, commodities and indices.",
+          "1H trend, 15M POI, 5M sniper entries with live pips and history.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -83,11 +83,11 @@ function Index() {
           <Bot className="size-7 text-primary" />
         </div>
         <h1 className="text-glow text-3xl font-extrabold tracking-tight sm:text-4xl">
-          AI Trading Signals
+          Scalping Signals
         </h1>
         <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
-          Algorithmic trade setups with entry, take-profit, stop-loss and confidence scoring —
-          recalculated from live market data.
+          1H trend · 15M point of interest · 5M sniper entry. Stops capped at 100 pips —
+          recalculated every minute.
         </p>
 
         <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -112,7 +112,7 @@ function Index() {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold">{s.symbol}</span>
                 <span
-                  className={`size-1.5 rounded-full ${s.direction === "buy" ? "bg-buy" : "bg-sell"}`}
+                  className={`size-1.5 rounded-full ${!s.trade ? "bg-muted-foreground" : s.trade.direction === "buy" ? "bg-buy" : "bg-sell"}`}
                 />
               </div>
               <div className="font-mono-num mt-1 text-sm font-bold">
@@ -146,7 +146,7 @@ function Index() {
       </main>
 
       <footer className="border-t border-border py-8 text-center text-xs text-muted-foreground">
-        <p>SignalEdge · Signals are generated from end-of-day market data and are not financial advice.</p>
+        <p>SignalEdge · Signals are rule-based, use delayed market data and are not financial advice.</p>
       </footer>
     </div>
   );
