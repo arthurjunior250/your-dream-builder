@@ -157,7 +157,16 @@ export const Route = createFileRoute("/api/public/quotes")({
           SYMBOLS.map(async (meta) => {
             try {
               const { h1, m15, m5 } = await fetchSymbolCandles(meta, apiKey);
-              return computeSignal(meta, h1, m15, m5);
+              const signal = computeSignal(meta, h1, m15, m5);
+              const spot = spotPrices.get(meta.id);
+              if (signal && spot != null) {
+                const s = signal.trade?.direction === "sell" ? -1 : 1;
+                signal.price = spot;
+                if (signal.trade)
+                  signal.trade.runningPips =
+                    Math.round(((spot - signal.trade.entry) * s) / signal.pip * 10) / 10;
+              }
+              return signal;
             } catch {
               return null;
             }
