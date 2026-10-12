@@ -20,7 +20,13 @@ const SYMBOLS: SymbolDef[] = [
 // --- Twelve Data (fresher intraday data) with in-memory cache ---
 
 const TWELVE_DATA_API_KEY = "486149324655463ba3213153946304e4";
-const CACHE_TTL_MS = 5 * 60_000;
+// Free plan allows ~8 credits/min across 9 symbols, so slower timeframes
+// are cached longer and the 5m entry chart refreshes fastest.
+const CACHE_TTLS: Record<string, number> = {
+  "1h": 15 * 60_000,
+  "15min": 5 * 60_000,
+  "5min": 2 * 60_000,
+};
 const cache = new Map<string, { at: number; candles: Candle[] }>();
 
 interface TwelveValue {
@@ -34,7 +40,8 @@ interface TwelveValue {
 async function fetchTwelveCandles(symbol: string, interval: string, apiKey: string): Promise<Candle[]> {
   const cacheKey = `${symbol}:${interval}`;
   const hit = cache.get(cacheKey);
-  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.candles;
+  const ttl = CACHE_TTLS[interval] ?? 5 * 60_000;
+  if (hit && Date.now() - hit.at < ttl) return hit.candles;
 
   const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=400&timezone=UTC&apikey=${apiKey}`;
   const res = await fetch(url);
