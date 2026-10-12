@@ -40,7 +40,8 @@ interface TwelveValue {
 async function fetchTwelveCandles(symbol: string, interval: string, apiKey: string): Promise<Candle[]> {
   const cacheKey = `${symbol}:${interval}`;
   const hit = cache.get(cacheKey);
-  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.candles;
+  const ttl = CACHE_TTLS[interval] ?? 5 * 60_000;
+  if (hit && Date.now() - hit.at < ttl) return hit.candles;
 
   const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=400&timezone=UTC&apikey=${apiKey}`;
   const res = await fetch(url);
