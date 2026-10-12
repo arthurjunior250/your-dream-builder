@@ -112,16 +112,61 @@ async function fetchSymbolCandles(meta: SymbolDef, apiKey: string | undefined) {
   return { h1, m15, m5 };
 }
 
+// --- gold-api.com: free real-time spot prices (no key, no cache) ---
+
+const GOLD_API_SYMBOLS: Record<string, string> = {
+  XAUUSD: "XAU",
+  XAGUSD: "XAG",
+  BTCUSD: "BTC",
+  ETHUSD: "ETH",
+};
+
+async function fetchSpotPrices(): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  try {
+    const res = await fetch("https://api.gold-api.com/symbols");
+    if (!res.ok) return out;
+    const list = (await res.json()) as { symbol: string }[];
+    await Promise.all(
+      Object.entries(GOLD_API_SYMBOLS)
+        .filter(([, sym]) => list.some((s) => s.symbol === sym))
+        .map(async ([id, sym]) => {
+          try {
+            const r = await fetch(`https://api.gold-api.com/price/${sym}`);
+            if (!r.ok) return;
+            const j = (await r.json()) as { price?: number };
+            if (typeof j.price === "number" && Number.isFinite(j.price)) out.set(id, j.price);
+          } catch {
+            /* keep candle price */
+          }
+        }),
+    );
+  } catch {
+    /* keep candle prices */
+  }
+  return out;
+}
+
 export const Route = createFileRoute("/api/public/quotes")({
   server: {
     handlers: {
       GET: async () => {
         const apiKey = TWELVE_DATA_API_KEY;
+        const spotPrices = await fetchSpotPrices();
         const results = await Promise.all(
           SYMBOLS.map(async (meta) => {
             try {
               const { h1, m15, m5 } = await fetchSymbolCandles(meta, apiKey);
-              return computeSignal(meta, h1, m15, m5);
+              const signal = computeSignal(meta, h1, m15, m5);
+              const spot = spotPrices.get(meta.id);
+              if (signal && spot != null) {
+                const s = signal.trade?.direction === "sell" ? -1 : 1;
+                signal.price = spot;
+                if (signal.trade)
+                  signal.trade.runningPips =
+                    Math.round(((spot - signal.trade.entry) * s) / signal.pip * 10) / 10;
+              }
+              return signal;
             } catch {
               return null;
             }
