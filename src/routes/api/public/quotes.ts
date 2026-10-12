@@ -19,6 +19,7 @@ const SYMBOLS: SymbolDef[] = [
 
 // --- Twelve Data (fresher intraday data) with in-memory cache ---
 
+const TWELVE_DATA_API_KEY = "486149324655463ba3213153946304e4";
 const CACHE_TTL_MS = 5 * 60_000;
 const cache = new Map<string, { at: number; candles: Candle[] }>();
 
@@ -108,7 +109,7 @@ export const Route = createFileRoute("/api/public/quotes")({
   server: {
     handlers: {
       GET: async () => {
-        const apiKey = process.env["TWELVE_DATA_API_KEY"];
+        const apiKey = TWELVE_DATA_API_KEY;
         const results = await Promise.all(
           SYMBOLS.map(async (meta) => {
             try {
